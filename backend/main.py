@@ -16,7 +16,6 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from mangum import Mangum
 from audit_engine import AuditEngine
-from generate_certificate_pdf import PDFCertificateGenerator
 
 app = FastAPI(
     title="TrustCode AI Audit API",
