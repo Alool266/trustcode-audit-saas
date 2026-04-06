@@ -57,39 +57,29 @@ export default function Home() {
       const formData = new FormData();
       formData.append('file', file);
 
-      // For demo, we'll use the local Python backend
-      // In production, this would call your API
       const response = await fetch('/api/audit', {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Audit failed');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `Audit failed with status ${response.status}`);
       }
 
       const data = await response.json();
+      
+      // Validate that we got real audit data, not sample data
+      if (!data.TrustScore && !data.Findings) {
+        throw new Error('Invalid audit response - missing TrustScore and Findings');
+      }
+      
       setResult(data);
       setScanProgress(100);
     } catch (err) {
-      // For demo purposes, simulate a result if backend isn't available
-      // In production, remove this fallback
-      console.warn('Backend not available, using demo mode');
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setScanProgress(100);
-      
-      // Load the sample audit results if available
-      try {
-        const sampleResponse = await fetch('/api/sample-results');
-        if (sampleResponse.ok) {
-          const sampleData = await sampleResponse.json();
-          setResult(sampleData);
-        } else {
-          setError('Backend API not available. Please ensure the Python audit engine is running.');
-        }
-      } catch {
-        setError('Backend API not available. Please ensure the Python audit engine is running.');
-      }
+      const errorMessage = err instanceof Error ? err.message : 'Audit failed';
+      setError(`Audit failed: ${errorMessage}. Please ensure the backend API is properly configured.`);
+      console.error('Audit error:', err);
     } finally {
       clearInterval(progressInterval);
       setTimeout(() => setIsScanning(false), 500);
