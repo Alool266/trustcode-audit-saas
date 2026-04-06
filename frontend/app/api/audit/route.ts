@@ -5,7 +5,7 @@ import fs from 'fs';
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<Response> {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;

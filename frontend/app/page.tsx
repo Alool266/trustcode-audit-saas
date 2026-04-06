@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface AuditResult {
   TrustScore: number;
@@ -143,6 +145,211 @@ export default function Home() {
       case 'low': return 'bg-cyan-400';
       default: return 'bg-slate-400';
     }
+  };
+
+  const generateCertificate = (auditResult: AuditResult) => {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    let y = 20;
+
+    // Background
+    doc.setFillColor(2, 6, 23); // #020617
+    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+    // Top border line
+    doc.setDrawColor(6, 182, 212); // cyan-500
+    doc.setLineWidth(1);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 15;
+
+    // Header - TrustCode AI
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(28);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TrustCode AI', pageWidth / 2, y, { align: 'center' });
+    y += 8;
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(148, 163, 184); // slate-400
+    doc.text('AI Code Compliance Certificate', pageWidth / 2, y, { align: 'center' });
+    y += 15;
+
+    // Divider line
+    doc.setDrawColor(51, 65, 85); // slate-700
+    doc.setLineWidth(0.5);
+    doc.line(margin + 20, y, pageWidth - margin - 20, y);
+    y += 15;
+
+    // TrustScore Circle
+    const centerX = pageWidth / 2;
+    const scoreColor: [number, number, number] = auditResult.TrustScore >= 80 ? [52, 211, 153] : // emerald-400
+                       auditResult.TrustScore >= 60 ? [34, 211, 238] : // cyan-400
+                       auditResult.TrustScore >= 40 ? [251, 191, 36] : // amber-400
+                       [251, 113, 133]; // rose-400
+
+    // Circle background
+    doc.setFillColor(30, 41, 59); // slate-800
+    doc.circle(centerX, y + 15, 22, 'F');
+    
+    // Circle border
+    doc.setDrawColor(51, 65, 85);
+    doc.setLineWidth(1.5);
+    doc.circle(centerX, y + 15, 22, 'S');
+
+    // Score text
+    doc.setTextColor(...scoreColor);
+    doc.setFontSize(28);
+    doc.setFont('helvetica', 'bold');
+    doc.text(String(auditResult.TrustScore), centerX, y + 12, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setTextColor(148, 163, 184);
+    doc.text('/ 100', centerX, y + 20, { align: 'center' });
+    y += 42;
+
+    // Score label
+    const scoreLabel = auditResult.TrustScore >= 80 ? 'EXCELLENT' :
+                       auditResult.TrustScore >= 60 ? 'GOOD' :
+                       auditResult.TrustScore >= 40 ? 'MODERATE' : 'CRITICAL';
+    doc.setTextColor(...scoreColor);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(scoreLabel, pageWidth / 2, y, { align: 'center' });
+    y += 15;
+
+    // Stats grid
+    doc.setDrawColor(51, 65, 85);
+    doc.setLineWidth(0.3);
+    
+    const stats = [
+      { label: 'Total Issues', value: String(auditResult.AuditMetadata.total_findings) },
+      { label: 'Critical/High', value: String(auditResult.Findings.filter(f =>
+        f.severity === 'critical' || f.severity === 'high').length) },
+      { label: 'Audit Date', value: new Date(auditResult.AuditMetadata.audit_date).toLocaleDateString() }
+    ];
+
+    const statWidth = (pageWidth - margin * 2 - 20) / 3;
+    stats.forEach((stat, i) => {
+      const x = margin + i * (statWidth + 10);
+      doc.setFillColor(15, 23, 42); // slate-900
+      doc.roundedRect(x, y, statWidth, 25, 3, 3, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text(stat.value, x + statWidth / 2, y + 11, { align: 'center' });
+      
+      doc.setFontSize(8);
+      doc.setTextColor(148, 163, 184);
+      doc.setFont('helvetica', 'normal');
+      doc.text(stat.label, x + statWidth / 2, y + 19, { align: 'center' });
+    });
+    y += 40;
+
+    // Findings section
+    if (auditResult.Findings.length > 0) {
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Detailed Findings', margin, y);
+      y += 8;
+
+      // Table
+      const tableData = auditResult.Findings.map(f => [
+        f.severity.toUpperCase(),
+        f.category,
+        f.message.substring(0, 50) + (f.message.length > 50 ? '...' : ''),
+        String(f.line)
+      ]);
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Severity', 'Category', 'Issue', 'Line']],
+        body: tableData,
+        theme: 'grid',
+        styles: {
+          fillColor: [15, 23, 42],
+          textColor: [226, 232, 240],
+          fontSize: 8,
+          cellPadding: 4,
+          lineColor: [51, 65, 85],
+          lineWidth: 0.3
+        },
+        headStyles: {
+          fillColor: [6, 182, 212],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        columnStyles: {
+          0: { cellWidth: 25 },
+          1: { cellWidth: 35 },
+          2: { cellWidth: 100 },
+          3: { cellWidth: 20, halign: 'center' }
+        },
+        didParseCell: function(data: any) {
+          if (data.section === 'body' && data.column.index === 0) {
+            const severity = data.cell.raw.toLowerCase();
+            if (severity.includes('critical')) {
+              data.cell.styles.fillColor = [225, 29, 72]; // rose-600
+            } else if (severity.includes('high')) {
+              data.cell.styles.fillColor = [244, 63, 94]; // rose-500
+            } else if (severity.includes('medium')) {
+              data.cell.styles.fillColor = [245, 158, 11]; // amber-500
+            } else if (severity.includes('low')) {
+              data.cell.styles.fillColor = [6, 182, 212]; // cyan-500
+            }
+          }
+        },
+        margin: { left: margin, right: margin }
+      });
+
+      y = (doc as any).lastAutoTable.finalY + 15;
+    }
+
+    // Recommendation section
+    if (y > pageHeight - 80) {
+      doc.addPage();
+      y = 20;
+    }
+
+    doc.setFillColor(15, 23, 42);
+    doc.roundedRect(margin, y, pageWidth - margin * 2, 45, 4, 4, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PhD-Level Recommendation', margin + 8, y + 10);
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(203, 213, 225); // slate-300
+    
+    const recLines = doc.splitTextToSize(auditResult.PhD_Level_Recommendation, pageWidth - margin * 2 - 16);
+    doc.text(recLines, margin + 8, y + 18);
+
+    // Footer
+    y = pageHeight - 35;
+    doc.setDrawColor(30, 41, 59);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 10;
+
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139); // slate-500
+    doc.text('TrustCode AI Engine v1.0.0 | Certified by PhD Research Standards', pageWidth / 2, y, { align: 'center' });
+    y += 5;
+    doc.text('Created by Ali Hasan | https://alool266.github.io/portfolio-website/', pageWidth / 2, y, { align: 'center' });
+
+    // Save
+    doc.save(`TrustCode_Certificate_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   return (
@@ -394,31 +601,7 @@ export default function Home() {
                 className="flex justify-center"
               >
                 <button
-                  onClick={async () => {
-                    try {
-                      const response = await fetch('/api/generate-certificate', {
-                        method: 'POST',
-                        body: JSON.stringify({ auditJson: JSON.stringify(result) }),
-                      });
-                      
-                      if (response.ok) {
-                        const blob = await response.blob();
-                        const url = window.URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `TrustCode_Certificate_${new Date().toISOString().split('T')[0]}.pdf`;
-                        document.body.appendChild(a);
-                        a.click();
-                        window.URL.revokeObjectURL(url);
-                        document.body.removeChild(a);
-                      } else {
-                        alert('Failed to generate certificate');
-                      }
-                    } catch (error) {
-                      console.error('Certificate download error:', error);
-                      alert('Failed to generate certificate');
-                    }
-                  }}
+                  onClick={() => generateCertificate(result)}
                   className="group flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 rounded-full text-white font-semibold shadow-lg shadow-cyan-500/25 transition-all hover:scale-105 active:scale-95"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

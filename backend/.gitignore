@@ -36,3 +36,4 @@ uploads/
 certificates/
 *.pdf
 *.docx
+.vercel

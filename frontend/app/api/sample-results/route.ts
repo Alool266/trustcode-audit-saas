@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-export async function GET() {
+export async function GET(): Promise<Response> {
   try {
     // If backend API is configured, use it
     if (BACKEND_API_URL && BACKEND_API_URL !== 'http://localhost:8000') {
