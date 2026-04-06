@@ -4,15 +4,27 @@
     {
       "src": "package.json",
       "use": "@vercel/next"
+    },
+    {
+      "src": "app/api/audit/route.py",
+      "use": "@vercel/python",
+      "config": {
+        "runtime": "python3.11"
+      }
     }
   ],
   "routes": [
     {
+      "src": "/api/audit",
+      "dest": "app/api/audit/route.py"
+    },
+    {
+      "src": "/api/sample-results",
+      "dest": "app/api/audit/route.py"
+    },
+    {
       "src": "/(.*)",
       "dest": "/$1"
     }
-  ],
-  "env": {
-    "PYTHON_PATH": "/usr/bin/python3"
-  }
+  ]
 }

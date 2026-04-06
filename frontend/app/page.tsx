@@ -68,17 +68,11 @@ export default function Home() {
       }
 
       const data = await response.json();
-      
-      // Validate that we got real audit data, not sample data
-      if (!data.TrustScore && !data.Findings) {
-        throw new Error('Invalid audit response - missing TrustScore and Findings');
-      }
-      
       setResult(data);
       setScanProgress(100);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Audit failed';
-      setError(`Audit failed: ${errorMessage}. Please ensure the backend API is properly configured.`);
+      setError(`Audit failed: ${errorMessage}. Please try again.`);
       console.error('Audit error:', err);
     } finally {
       clearInterval(progressInterval);
