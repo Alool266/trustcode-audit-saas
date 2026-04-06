@@ -1,0 +1,76 @@
+{
+  "TrustScore": 15,
+  "Findings": [
+    {
+      "category": "Performance Risk",
+      "severity": "low",
+      "message": "Nested loop detected - potential O(n²) complexity",
+      "line": 36,
+      "snippet": "    \"\"\"Inefficient O(n²) duplicate detection.\"\"\"\n    duplicates = []\n>>>     for i in range(len(items)):\n        for j in range(i + 1, len(items)):\n            if items[i] == items[j]:",
+      "recommendation": "Consider using dictionaries, sets, or list comprehensions to reduce complexity."
+    },
+    {
+      "category": "Unknown API",
+      "severity": "high",
+      "message": "Potentially hallucinated method 'read_csv_fast' in pandas. Did you mean: read_csv?",
+      "line": 13,
+      "snippet": "def load_data_fast():\n    \"\"\"This uses a hallucinated pandas method.\"\"\"\n>>>     data = pd.read_csv_fast('data.csv')  # Should be read_csv\n    return data\n",
+      "recommendation": "Verify the pandas API documentation for correct method names."
+    },
+    {
+      "category": "Silent Logic Failure",
+      "severity": "medium",
+      "message": "Empty except block that silently catches all exceptions",
+      "line": 21,
+      "snippet": "    try:\n        result = 10 / 0\n>>>     except:  # Empty except - BAD\n        pass\n    return result",
+      "recommendation": "Add specific exception handling or at least log the error."
+    },
+    {
+      "category": "Silent Logic Failure",
+      "severity": "medium",
+      "message": "Bare 'except:' catches all exceptions including SystemExit and KeyboardInterrupt",
+      "line": 21,
+      "snippet": "    try:\n        result = 10 / 0\n>>>     except:  # Empty except - BAD\n        pass\n    return result",
+      "recommendation": "Use 'except Exception:' or catch specific exceptions."
+    },
+    {
+      "category": "Silent Logic Failure",
+      "severity": "medium",
+      "message": "Bare 'except:' catches all exceptions including SystemExit and KeyboardInterrupt",
+      "line": 53,
+      "snippet": "    try:\n        import some_module\n>>>     except:  # Catches SystemExit, KeyboardInterrupt - BAD\n        print(\"Something went wrong\")\n",
+      "recommendation": "Use 'except Exception:' or catch specific exceptions."
+    },
+    {
+      "category": "Unknown API",
+      "severity": "high",
+      "message": "Potentially hallucinated method 'zeros_fast' in numpy. Did you mean: zeros?",
+      "line": 59,
+      "snippet": "def create_matrix():\n    \"\"\"Uses hallucinated numpy method.\"\"\"\n>>>     matrix = np.zeros_fast((100, 100))  # Should be np.zeros\n    return matrix\n",
+      "recommendation": "Verify the numpy API documentation for correct method names."
+    },
+    {
+      "category": "Security",
+      "severity": "critical",
+      "message": "Dangerous function 'eval' used - code injection risk",
+      "line": 65,
+      "snippet": "def process_user_input(user_input):\n    \"\"\"Dangerous eval usage.\"\"\"\n>>>     result = eval(user_input)  # CRITICAL security issue\n    return result\n",
+      "recommendation": "Avoid eval/exec. Use safer alternatives like ast.literal_eval() or specific APIs."
+    },
+    {
+      "category": "Code Quality",
+      "severity": "low",
+      "message": "Magic number 0.23 used without explanation",
+      "line": 45,
+      "snippet": "def calculate_tax(income):\n    \"\"\"Uses unexplained magic number.\"\"\"\n>>>     tax = income * 0.23  # Why 0.23? Should be TAX_RATE constant\n    return tax\n",
+      "recommendation": "Replace with named constant for better maintainability."
+    }
+  ],
+  "PhD_Level_Recommendation": "CRITICAL INTERVENTION REQUIRED: 1 critical issue(s) detected. Immediate refactoring is essential before production deployment. Focus on security vulnerabilities and API correctness. The current code exhibits patterns consistent with AI hallucination artifacts.",
+  "AuditMetadata": {
+    "file": "sample_code.py",
+    "audit_date": "2026-04-07T00:43:06.913572",
+    "engine_version": "1.0.0",
+    "total_findings": 8
+  }
+}

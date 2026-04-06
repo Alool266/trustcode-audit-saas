@@ -1,0 +1,28 @@
+{
+  "TrustScore": 30,
+  "Findings": [
+    {
+      "Category": "Unknown API",
+      "Severity": "high",
+      "Message": "Potentially hallucinated method 'read_csv_fast' in pandas. Did you mean: read_csv?",
+      "Line": 13,
+      "Snippet": "def load_data_fast():\n    \"\"\"This uses a hallucinated pandas method.\"\"\"\n>>>     data = pd.read_csv_fast('data.csv')  # Should be read_csv\n    return data",
+      "Recommendation": "Verify the pandas API documentation for correct method names."
+    },
+    {
+      "Category": "Security",
+      "Severity": "critical",
+      "Message": "Dangerous function 'eval' used - code injection risk",
+      "Line": 65,
+      "Snippet": "def process_user_input(user_input):\n    \"\"\"Dangerous eval usage.\"\"\"\n>>>     result = eval(user_input)  # CRITICAL security issue\n    return result",
+      "Recommendation": "Avoid eval/exec. Use safer alternatives like ast.literal_eval() or specific APIs."
+    }
+  ],
+  "PhD_Level_Recommendation": "CRITICAL INTERVENTION REQUIRED: 1 critical issue(s) detected. Immediate refactoring is essential before production deployment. Focus on security vulnerabilities and API correctness.",
+  "AuditMetadata": {
+    "Filename": "sample_code.py",
+    "AuditTimestamp": "2025-01-15 10:30:00",
+    "EngineVersion": "1.0.0",
+    "TotalLines": 50
+  }
+}
