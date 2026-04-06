@@ -6,6 +6,7 @@ import os
 import sys
 import json
 import uuid
+import tempfile
 from pathlib import Path
 
 # Add current directory to path for imports
@@ -31,9 +32,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Directories will be created lazily in endpoints
-UPLOAD_DIR = Path("/tmp/uploads")
-CERT_DIR = Path("/tmp/certificates")
+# Use platform-appropriate temp directory
+if os.environ.get('VERCEL'):
+    # On Vercel, use /tmp
+    UPLOAD_DIR = Path("/tmp/uploads")
+else:
+    # Local development - use system temp directory
+    UPLOAD_DIR = Path(tempfile.gettempdir()) / "trustcode_audit_uploads"
 
 
 @app.get("/health")
