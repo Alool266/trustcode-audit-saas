@@ -31,10 +31,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Directories will be created lazily in endpoints
 UPLOAD_DIR = Path("/tmp/uploads")
 CERT_DIR = Path("/tmp/certificates")
-UPLOAD_DIR.mkdir(exist_ok=True)
-CERT_DIR.mkdir(exist_ok=True)
 
 
 @app.get("/health")
@@ -47,6 +46,9 @@ async def audit_code(file: UploadFile = File(...)):
     if not file.filename or not file.filename.endswith('.py'):
         raise HTTPException(status_code=400, detail="Only Python (.py) files are supported")
 
+    # Ensure upload directory exists
+    UPLOAD_DIR.mkdir(exist_ok=True)
+    
     file_id = str(uuid.uuid4())
     file_path = UPLOAD_DIR / f"{file_id}.py"
 
@@ -60,17 +62,16 @@ async def audit_code(file: UploadFile = File(...)):
         engine.analyze()
         report = engine.generate_report()
 
-        report_path = UPLOAD_DIR / f"{file_id}_report.json"
-        with open(report_path, 'w') as f:
-            json.dump(report, f, indent=2)
-
         return JSONResponse(content=report)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Audit failed: {str(e)}")
     finally:
         if file_path.exists():
-            file_path.unlink()
+            try:
+                file_path.unlink()
+            except:
+                pass
 
 
 @app.post("/api/generate-certificate")
