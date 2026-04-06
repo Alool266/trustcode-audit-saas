@@ -10,8 +10,9 @@ import uuid
 import tempfile
 from pathlib import Path
 
-# Add current directory to path for imports
+# Add current directory and parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.responses import JSONResponse
