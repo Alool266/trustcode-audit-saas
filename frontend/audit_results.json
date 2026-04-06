@@ -1,0 +1,140 @@
+{
+  "TrustScore": 5,
+  "Findings": [
+    {
+      "category": "Performance Risk",
+      "severity": "low",
+      "message": "Nested loop detected - potential O(n²) complexity",
+      "line": 31,
+      "snippet": "# Issue 5: Nested loops (3 levels deep)\ndef nested_loops():\n>>>     for i in range(10):\n        for j in range(10):\n            for k in range(10):  # Third nested loop",
+      "recommendation": "Consider using dictionaries, sets, or list comprehensions to reduce complexity."
+    },
+    {
+      "category": "Silent Logic Failure",
+      "severity": "medium",
+      "message": "Empty except block that silently catches all exceptions",
+      "line": 19,
+      "snippet": "    try:\n        eval(\"2 + 2\")  # Issue 3: Eval usage\n>>>     except:  # Issue 2: Empty except block\n        pass\n",
+      "recommendation": "Add specific exception handling or at least log the error."
+    },
+    {
+      "category": "Silent Logic Failure",
+      "severity": "medium",
+      "message": "Bare 'except:' catches all exceptions including SystemExit and KeyboardInterrupt",
+      "line": 19,
+      "snippet": "    try:\n        eval(\"2 + 2\")  # Issue 3: Eval usage\n>>>     except:  # Issue 2: Empty except block\n        pass\n",
+      "recommendation": "Use 'except Exception:' or catch specific exceptions."
+    },
+    {
+      "category": "Silent Logic Failure",
+      "severity": "medium",
+      "message": "Bare 'except:' catches all exceptions including SystemExit and KeyboardInterrupt",
+      "line": 26,
+      "snippet": "    try:\n        x = 1 / 0\n>>>     except:  # Bare except - should be specific\n        print(\"Error occurred\")\n",
+      "recommendation": "Use 'except Exception:' or catch specific exceptions."
+    },
+    {
+      "category": "Performance Risk",
+      "severity": "low",
+      "message": "Nested loop detected - potential O(n²) complexity",
+      "line": 32,
+      "snippet": "def nested_loops():\n    for i in range(10):\n>>>         for j in range(10):\n            for k in range(10):  # Third nested loop\n                print(i, j, k)",
+      "recommendation": "Consider using dictionaries, sets, or list comprehensions to reduce complexity."
+    },
+    {
+      "category": "Performance Risk",
+      "severity": "low",
+      "message": "Nested loop detected - potential O(n²) complexity",
+      "line": 58,
+      "snippet": "def complex_function(data):\n    try:\n>>>         for item in data:\n            for subitem in item:\n                for elem in subitem:",
+      "recommendation": "Consider using dictionaries, sets, or list comprehensions to reduce complexity."
+    },
+    {
+      "category": "Silent Logic Failure",
+      "severity": "medium",
+      "message": "Empty except block that silently catches all exceptions",
+      "line": 64,
+      "snippet": "                        if deep < 0:\n                            raise ValueError()\n>>>     except:\n        pass\n",
+      "recommendation": "Add specific exception handling or at least log the error."
+    },
+    {
+      "category": "Silent Logic Failure",
+      "severity": "medium",
+      "message": "Bare 'except:' catches all exceptions including SystemExit and KeyboardInterrupt",
+      "line": 64,
+      "snippet": "                        if deep < 0:\n                            raise ValueError()\n>>>     except:\n        pass\n",
+      "recommendation": "Use 'except Exception:' or catch specific exceptions."
+    },
+    {
+      "category": "Code Quality",
+      "severity": "low",
+      "message": "Magic number 300 used without explanation",
+      "line": 73,
+      "snippet": "# More magic numbers and unknown APIs\ndef process():\n>>>     timeout = 300  # Magic number\n    retry_count = 5  # Magic number\n    result = custom_retry_operation(timeout, retry_count)  # Unknown API",
+      "recommendation": "Replace with named constant for better maintainability."
+    },
+    {
+      "category": "Code Quality",
+      "severity": "low",
+      "message": "Magic number 5 used without explanation",
+      "line": 74,
+      "snippet": "def process():\n    timeout = 300  # Magic number\n>>>     retry_count = 5  # Magic number\n    result = custom_retry_operation(timeout, retry_count)  # Unknown API\n    return result",
+      "recommendation": "Replace with named constant for better maintainability."
+    },
+    {
+      "category": "Security",
+      "severity": "critical",
+      "message": "Dangerous function 'eval' used - code injection risk",
+      "line": 18,
+      "snippet": "def risky_operation():\n    try:\n>>>         eval(\"2 + 2\")  # Issue 3: Eval usage\n    except:  # Issue 2: Empty except block\n        pass",
+      "recommendation": "Avoid eval/exec. Use safer alternatives like ast.literal_eval() or specific APIs."
+    },
+    {
+      "category": "Code Quality",
+      "severity": "low",
+      "message": "Magic number 3.14159 used without explanation",
+      "line": 45,
+      "snippet": "# Issue 7: Magic numbers\ndef calculate():\n>>>     x = value * 3.14159  # Magic number PI\n    y = x + 42  # Magic number 42\n    z = y / 1.618  # Magic number golden ratio",
+      "recommendation": "Replace with named constant for better maintainability."
+    },
+    {
+      "category": "Code Quality",
+      "severity": "low",
+      "message": "Magic number 42 used without explanation",
+      "line": 46,
+      "snippet": "def calculate():\n    x = value * 3.14159  # Magic number PI\n>>>     y = x + 42  # Magic number 42\n    z = y / 1.618  # Magic number golden ratio\n    return z",
+      "recommendation": "Replace with named constant for better maintainability."
+    },
+    {
+      "category": "Code Quality",
+      "severity": "low",
+      "message": "Magic number 1.618 used without explanation",
+      "line": 47,
+      "snippet": "    x = value * 3.14159  # Magic number PI\n    y = x + 42  # Magic number 42\n>>>     z = y / 1.618  # Magic number golden ratio\n    return z\n",
+      "recommendation": "Replace with named constant for better maintainability."
+    },
+    {
+      "category": "Performance Risk",
+      "severity": "low",
+      "message": "Nested loop detected - potential O(n²) complexity",
+      "line": 59,
+      "snippet": "    try:\n        for item in data:\n>>>             for subitem in item:\n                for elem in subitem:\n                    for deep in elem:  # 4 levels - severe!",
+      "recommendation": "Consider using dictionaries, sets, or list comprehensions to reduce complexity."
+    },
+    {
+      "category": "Performance Risk",
+      "severity": "low",
+      "message": "Nested loop detected - potential O(n²) complexity",
+      "line": 60,
+      "snippet": "        for item in data:\n            for subitem in item:\n>>>                 for elem in subitem:\n                    for deep in elem:  # 4 levels - severe!\n                        if deep < 0:",
+      "recommendation": "Consider using dictionaries, sets, or list comprehensions to reduce complexity."
+    }
+  ],
+  "PhD_Level_Recommendation": "CRITICAL INTERVENTION REQUIRED: 1 critical issue(s) detected. Immediate refactoring is essential before production deployment. Focus on security vulnerabilities and API correctness. The current code exhibits patterns consistent with AI hallucination artifacts.",
+  "AuditMetadata": {
+    "file": "c:\\Users\\lx\\Desktop\\e\\test_audit_bad_code.py",
+    "audit_date": "2026-04-07T03:46:25.561617",
+    "engine_version": "1.0.0",
+    "total_findings": 16
+  }
+}
