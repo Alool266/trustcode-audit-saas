@@ -122,6 +122,8 @@ The frontend provides proxy endpoints that either:
 3. Set environment variable: `NEXT_PUBLIC_API_URL` to your backend URL
 4. Deploy
 
+**Live Demo:** [https://frontend-six-psi-78.vercel.app](https://frontend-six-psi-78.vercel.app)
+
 ### Railway/Heroku (Backend)
 
 1. Push code to GitHub
@@ -160,6 +162,45 @@ Certificates include:
 - PhD-level recommendations
 - Professional branding with creator credit
 - Footer with timestamp and logo
+
+## Suggestions for Improvement
+
+### Audit Engine Enhancements
+- **Add more detection rules**: SQL injection patterns, XSS vulnerabilities, insecure deserialization
+- **Support more languages**: JavaScript/TypeScript, Java, Go, Rust
+- **AST-based data flow analysis**: Track variable taint propagation for security issues
+- **Custom rule engine**: Allow users to define custom detection rules via YAML/JSON
+- **Severity scoring**: Implement CVSS-like scoring for more granular severity levels
+- **False positive reduction**: Add context-aware analysis to reduce false positives
+
+### UI/UX Improvements
+- **File history**: Track audit results over time with trend graphs
+- **Batch processing**: Upload multiple files at once
+- **GitHub/GitLab integration**: Connect repositories for automated CI/CD scanning
+- **Dark/light mode toggle**: Add theme switching capability
+- **Export formats**: Support JSON, CSV, HTML, and Markdown exports
+- **Interactive code viewer**: Highlight issues directly in the source code with syntax highlighting
+- **Dashboard**: Show aggregate statistics across multiple audits
+
+### Backend/Infrastructure
+- **Database integration**: Store audit results in PostgreSQL/MongoDB
+- **User authentication**: Add login/signup with JWT tokens
+- **Rate limiting**: Prevent abuse with request throttling
+- **Caching**: Cache results for identical files to improve performance
+- **Webhook support**: Notify external services when audits complete
+- **CI/CD pipeline**: Add GitHub Actions for automated testing and deployment
+
+### Certificate Enhancements
+- **Custom branding**: Allow users to add their company logo and colors
+- **Verification URL**: Add a unique URL to verify certificate authenticity
+- **QR code**: Embed QR code linking to verification page
+- **Multiple templates**: Offer different certificate styles (corporate, academic, etc.)
+
+### Monetization Features
+- **Free tier**: Limited to 5 audits per month
+- **Pro tier**: Unlimited audits, custom branding, priority support
+- **Enterprise tier**: SSO, API access, dedicated support, SLA
+- **Usage analytics**: Dashboard showing audit trends and team usage
 
 ## License
 
