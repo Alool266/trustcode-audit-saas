@@ -1,0 +1,40 @@
+rule:
+  id: "CUSTOM-SEC-002"
+  name: "API Key Exposure"
+  description: "Detects exposed API keys and tokens in source code"
+  severity: "critical"
+  category: "Security"
+  language: "all"
+  
+  pattern:
+    type: "regex"
+    expression: |
+      (?i)(api[_-]?key|apikey|token|secret|access[_-]?key)\s*=\s*["'][A-Za-z0-9_\-]{20,}["']
+  
+  conditions:
+    file_extension: [".py", ".js", ".ts", ".java", ".go", ".rs"]
+    
+  false_positive_filters:
+    - "test_"
+    - "mock_"
+    - "fixture_"
+    - "example"
+    - "dummy"
+    - "YOUR_API_KEY"
+    - "INSERT_API_KEY"
+    - "placeholder"
+    
+  remediation:
+    message: "API keys and tokens should never be committed to source control. Use environment variables or a secure vault solution."
+    code_example: |
+      # Bad
+      api_key = "sk-1234567890abcdefghijklmnop"
+      
+      # Good (Python)
+      import os
+      api_key = os.environ.get("OPENAI_API_KEY")
+      
+      # Good (JavaScript)
+      const apiKey = process.env.OPENAI_API_KEY;
+      
+  version: "1.0"

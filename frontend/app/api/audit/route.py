@@ -24,6 +24,7 @@ from mangum import Mangum
 # Import the new modular architecture
 from analyzers.language_router import LanguageRouter
 from analyzers.false_positive_reducer import FalsePositiveReducer
+from custom_rule_engine import CustomRuleEngine, DEFAULT_RULES_DIR
 
 app = FastAPI(title="TrustCode AI Audit API")
 
@@ -35,9 +36,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize the router and reducer
+# Initialize the router, reducer, and custom rule engine
 router = LanguageRouter()
 reducer = FalsePositiveReducer()
+rule_engine = CustomRuleEngine(DEFAULT_RULES_DIR)
 
 
 @app.post("/api/audit")
@@ -96,8 +98,14 @@ async def audit_code(request: Request):
         # Analyze using the language router
         result = router.analyze_file(source_code, str(file_path))
         
-        # Apply false positive reduction
+        # Apply custom rules
+        language = router.get_language_name(str(file_path))
+        custom_findings = rule_engine.apply_all_rules(source_code, language, file_path=str(file_path))
+        
+        # Merge custom rule findings with existing findings
         if 'Findings' in result:
+            result['Findings'].extend(custom_findings)
+            # Apply false positive reduction
             result['Findings'] = reducer.filter_findings(result['Findings'], str(file_path))
             result['AuditMetadata']['total_findings'] = len(result['Findings'])
             # Recalculate trust score after filtering using the appropriate analyzer
@@ -171,8 +179,14 @@ async def audit_zip(file):
             # Analyze using the language router
             result = router.analyze_file(source_code, file_name)
             
-            # Apply false positive reduction
+            # Apply custom rules
+            language = router.get_language_name(file_name)
+            custom_findings = rule_engine.apply_all_rules(source_code, language, file_path=file_name)
+            
+            # Merge custom rule findings with existing findings
             if 'Findings' in result:
+                result['Findings'].extend(custom_findings)
+                # Apply false positive reduction
                 result['Findings'] = reducer.filter_findings(result['Findings'], file_name)
                 result['AuditMetadata']['total_findings'] = len(result['Findings'])
                 # Recalculate trust score after filtering using the appropriate analyzer
