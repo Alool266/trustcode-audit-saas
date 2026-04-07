@@ -256,8 +256,18 @@ async def audit_zip(file):
 
     # Generate overall recommendation
     if all_findings:
-        critical_count = sum(1 for f in all_findings if f.get('severity', '').lower() == 'critical')
-        high_count = sum(1 for f in all_findings if f.get('severity', '').lower() == 'high')
+        critical_count = 0
+        high_count = 0
+        for f in all_findings:
+            # Handle both AuditFinding objects and dictionaries
+            if isinstance(f, dict):
+                severity = f.get('severity', '').lower()
+            else:
+                severity = f.severity.lower()
+            if severity == 'critical':
+                critical_count += 1
+            elif severity == 'high':
+                high_count += 1
 
         if critical_count > 0:
             recommendation = f"CRITICAL: {critical_count} critical issue(s) found across {scanned_files} files. Immediate attention required."
