@@ -8,6 +8,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from analyzers.python_analyzer import PythonAnalyzer
+from analyzers.javascript_analyzer import JavaScriptAnalyzer
 from language_router import LanguageRouter
 from analyzers.false_positive_reducer import FalsePositiveReducer
 
@@ -45,20 +46,44 @@ print("=" * 60)
 
 # Test Python Analyzer
 print("\n1. Testing PythonAnalyzer:")
-analyzer = PythonAnalyzer()
-findings = analyzer.analyze(test_code, 'test.py')
-print(f"   Findings detected: {len(findings)}")
-for i, f in enumerate(findings, 1):
+py_analyzer = PythonAnalyzer()
+py_findings = py_analyzer.analyze(test_code, 'test.py')
+print(f"   Findings detected: {len(py_findings)}")
+for i, f in enumerate(py_findings, 1):
+    msg = f.message.encode('ascii', 'ignore').decode('ascii', 'ignore') if f.message else ''
+    print(f"   {i}. [{f.severity.upper()}] {f.category}: {msg}")
+
+# Test JavaScript Analyzer
+print("\n2. Testing JavaScriptAnalyzer:")
+js_analyzer = JavaScriptAnalyzer()
+js_test_code = '''
+const SECRET = "key123";
+function risky() { eval("alert(1)"); }
+console.log("debug");
+'''
+js_findings = js_analyzer.analyze(js_test_code, 'test.js')
+print(f"   Findings detected: {len(js_findings)}")
+for i, f in enumerate(js_findings, 1):
     msg = f.message.encode('ascii', 'ignore').decode('ascii', 'ignore') if f.message else ''
     print(f"   {i}. [{f.severity.upper()}] {f.category}: {msg}")
 
 # Test Language Router
-print("\n2. Testing LanguageRouter:")
+print("\n3. Testing LanguageRouter:")
 router = LanguageRouter()
-result = router.analyze_file(test_code, 'test.py')
-print(f"   TrustScore: {result['TrustScore']}/100")
-print(f"   Total findings: {len(result['Findings'])}")
-print(f"   Recommendation: {result['PhD_Level_Recommendation'][:80]}...")
+print(f"   Supported extensions: {', '.join(router.get_supported_extensions())}")
+print(f"   Registered analyzers: {len(set(router._analyzers.values()))}")
+
+# Test with Python file
+py_result = router.analyze_file(test_code, 'test.py')
+print(f"\n   Python file analysis:")
+print(f"   TrustScore: {py_result['TrustScore']}/100")
+print(f"   Total findings: {len(py_result['Findings'])}")
+
+# Test with JavaScript file
+js_result = router.analyze_file(js_test_code, 'test.js')
+print(f"\n   JavaScript file analysis:")
+print(f"   TrustScore: {js_result['TrustScore']}/100")
+print(f"   Total findings: {len(js_result['Findings'])}")
 
 # Test False Positive Reducer
 print("\n3. Testing FalsePositiveReducer:")

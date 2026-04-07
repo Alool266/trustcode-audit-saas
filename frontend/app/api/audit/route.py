@@ -62,9 +62,13 @@ async def audit_code(request: Request):
             # TODO: Implement zip handling in Sprint 2
             raise HTTPException(status_code=501, detail="Zip upload not yet supported")
         
-        # For now, only Python files
-        if not filename.endswith('.py'):
-            raise HTTPException(status_code=400, detail="Only Python (.py) files are supported")
+        # Check if the file extension is supported
+        supported_extensions = router.get_supported_extensions()
+        if not any(filename.endswith(ext) for ext in supported_extensions):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported file type. Supported extensions: {', '.join(supported_extensions)}"
+            )
         
         # Use platform-appropriate temp directory
         if os.environ.get('VERCEL'):
@@ -75,7 +79,9 @@ async def audit_code(request: Request):
         upload_dir.mkdir(exist_ok=True)
         
         file_id = str(uuid.uuid4())
-        file_path = upload_dir / f"{file_id}.py"
+        # Preserve original file extension
+        file_extension = Path(filename).suffix
+        file_path = upload_dir / f"{file_id}{file_extension}"
         
         # Read file content
         content = await file.read()
@@ -93,11 +99,11 @@ async def audit_code(request: Request):
         if 'Findings' in result:
             result['Findings'] = reducer.filter_findings(result['Findings'], str(file_path))
             result['AuditMetadata']['total_findings'] = len(result['Findings'])
-            # Recalculate trust score after filtering
-            from analyzers.python_analyzer import PythonAnalyzer
-            analyzer = PythonAnalyzer()
-            result['TrustScore'] = analyzer.calculate_trust_score(result['Findings'])
-            result['PhD_Level_Recommendation'] = analyzer.generate_recommendation(result['Findings'])
+            # Recalculate trust score after filtering using the appropriate analyzer
+            analyzer = router.get_analyzer(str(file_path))
+            if analyzer:
+                result['TrustScore'] = analyzer.calculate_trust_score(result['Findings'])
+                result['PhD_Level_Recommendation'] = analyzer.generate_recommendation(result['Findings'])
         
         return JSONResponse(content=result)
         

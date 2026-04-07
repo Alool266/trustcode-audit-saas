@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Type
 from analyzers.base_analyzer import BaseAnalyzer
 from analyzers.python_analyzer import PythonAnalyzer
+from analyzers.javascript_analyzer import JavaScriptAnalyzer
 
 
 class LanguageRouter:
@@ -22,6 +23,7 @@ class LanguageRouter:
     def _register_default_analyzers(self):
         """Register the default set of analyzers."""
         self.register_analyzer(PythonAnalyzer())
+        self.register_analyzer(JavaScriptAnalyzer())
     
     def register_analyzer(self, analyzer: BaseAnalyzer):
         """
