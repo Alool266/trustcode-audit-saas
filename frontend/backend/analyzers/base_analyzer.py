@@ -124,10 +124,11 @@ class BaseAnalyzer(ABC):
         ext = '.' + file_path.rsplit('.', 1)[-1].lower() if '.' in file_path else ''
         return ext in self.get_supported_extensions()
     
-    def calculate_cvss_score(self, finding: AuditFinding) -> float:
+    def calculate_cvss_score(self, finding) -> float:
         """
         Calculate CVSS-like score for a finding.
         Override in subclasses for language-specific scoring.
+        Handles both AuditFinding objects and dictionaries.
         """
         base_scores = {
             'critical': 9.0,
@@ -136,7 +137,12 @@ class BaseAnalyzer(ABC):
             'low': 2.5,
             'info': 0.5
         }
-        return base_scores.get(finding.severity.lower(), 5.0)
+        # Handle both AuditFinding objects and dictionaries
+        if isinstance(finding, dict):
+            severity = finding.get('severity', 'medium').lower()
+        else:
+            severity = finding.severity.lower()
+        return base_scores.get(severity, 5.0)
     
     def calculate_trust_score(self, findings: List) -> int:
         """
