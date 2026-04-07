@@ -138,9 +138,10 @@ class BaseAnalyzer(ABC):
         }
         return base_scores.get(finding.severity.lower(), 5.0)
     
-    def calculate_trust_score(self, findings: List[AuditFinding]) -> int:
+    def calculate_trust_score(self, findings: List) -> int:
         """
         Calculate overall trust score (0-100) based on findings.
+        Handles both AuditFinding objects and dictionaries.
         """
         score = 100
         
@@ -153,7 +154,12 @@ class BaseAnalyzer(ABC):
         }
         
         for finding in findings:
-            weight = severity_weights.get(finding.severity.lower(), 5)
+            # Handle both AuditFinding objects and dictionaries
+            if isinstance(finding, dict):
+                severity = finding.get('severity', 'medium').lower()
+            else:
+                severity = finding.severity.lower()
+            weight = severity_weights.get(severity, 5)
             score -= weight
         
         return max(0, min(100, score))
