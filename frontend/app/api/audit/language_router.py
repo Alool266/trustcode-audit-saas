@@ -9,6 +9,9 @@ from typing import Dict, List, Optional, Type
 from analyzers.base_analyzer import BaseAnalyzer
 from analyzers.python_analyzer import PythonAnalyzer
 from analyzers.javascript_analyzer import JavaScriptAnalyzer
+from analyzers.java_analyzer import JavaAnalyzer
+from analyzers.go_analyzer import GoAnalyzer
+from analyzers.rust_analyzer import RustAnalyzer
 
 
 class LanguageRouter:
@@ -24,6 +27,9 @@ class LanguageRouter:
         """Register the default set of analyzers."""
         self.register_analyzer(PythonAnalyzer())
         self.register_analyzer(JavaScriptAnalyzer())
+        self.register_analyzer(JavaAnalyzer())
+        self.register_analyzer(GoAnalyzer())
+        self.register_analyzer(RustAnalyzer())
     
     def register_analyzer(self, analyzer: BaseAnalyzer):
         """
