@@ -19,10 +19,6 @@
       "dest": "app/api/audit/route.py"
     },
     {
-      "src": "/api/sample-results",
-      "dest": "app/api/audit/route.py"
-    },
-    {
       "src": "/(.*)",
       "dest": "/$1"
     }
