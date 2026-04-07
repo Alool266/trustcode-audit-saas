@@ -132,6 +132,14 @@ export default function Home() {
     }
   };
 
+  // Helper to get all findings from either single file or zip results
+  const getAllFindings = (result: AuditResult) => {
+    if (result.FileResults) {
+      return result.FileResults.flatMap(fr => fr.Findings);
+    }
+    return result.Findings || [];
+  };
+
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-emerald-400';
     if (score >= 60) return 'text-cyan-400';
@@ -238,9 +246,10 @@ export default function Home() {
     doc.setDrawColor(51, 65, 85);
     doc.setLineWidth(0.3);
     
+    const allFindings = getAllFindings(auditResult);
     const stats = [
       { label: 'Total Issues', value: String(auditResult.AuditMetadata.total_findings) },
-      { label: 'Critical/High', value: String(auditResult.Findings.filter(f =>
+      { label: 'Critical/High', value: String(allFindings.filter(f =>
         f.severity === 'critical' || f.severity === 'high').length) },
       { label: 'Audit Date', value: new Date(auditResult.AuditMetadata.audit_date).toLocaleDateString() }
     ];
@@ -264,7 +273,7 @@ export default function Home() {
     y += 40;
 
     // Findings section
-    if (auditResult.Findings.length > 0) {
+    if (allFindings.length > 0) {
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
@@ -272,7 +281,7 @@ export default function Home() {
       y += 8;
 
       // Table
-      const tableData = auditResult.Findings.map(f => [
+      const tableData = allFindings.map(f => [
         f.severity.toUpperCase(),
         f.category,
         f.message.substring(0, 50) + (f.message.length > 50 ? '...' : ''),
@@ -538,7 +547,12 @@ export default function Home() {
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-cyan-400">
-                      {result.Findings.filter(f => f.severity === 'critical' || f.severity === 'high').length}
+                      {(() => {
+                        const allFindings = result.FileResults
+                          ? result.FileResults.flatMap(fr => fr.Findings)
+                          : result.Findings;
+                        return allFindings.filter(f => f.severity === 'critical' || f.severity === 'high').length;
+                      })()}
                     </div>
                     <div className="text-sm text-slate-400">Critical/High</div>
                   </div>
@@ -552,7 +566,7 @@ export default function Home() {
               </div>
 
               {/* Filter Controls */}
-              {(result.FileResults || result.Findings.length > 0) && (
+              {(result.FileResults || getAllFindings(result).length > 0) && (
                 <div className="glass rounded-2xl p-4">
                   <div className="flex flex-wrap gap-4 items-center">
                     {/* Search */}
@@ -584,9 +598,7 @@ export default function Home() {
                     {/* Results Summary */}
                     <div className="text-sm text-slate-400">
                       {(() => {
-                        const allFindings = result.FileResults
-                          ? result.FileResults.flatMap(fr => fr.Findings)
-                          : result.Findings;
+                        const allFindings = getAllFindings(result);
                         const filtered = allFindings.filter(f => {
                           const matchesSearch = !searchQuery ||
                             f.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -704,12 +716,17 @@ export default function Home() {
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
-                          data={[
-                            { name: 'Critical', value: result.Findings.filter(f => f.severity === 'critical').length, color: '#e11d48' },
-                            { name: 'High', value: result.Findings.filter(f => f.severity === 'high').length, color: '#f43f5e' },
-                            { name: 'Medium', value: result.Findings.filter(f => f.severity === 'medium').length, color: '#f59e0b' },
-                            { name: 'Low', value: result.Findings.filter(f => f.severity === 'low').length, color: '#06b6d4' },
-                          ]}
+                          data={(() => {
+                            const allFindings = result.FileResults
+                              ? result.FileResults.flatMap(fr => fr.Findings)
+                              : result.Findings || [];
+                            return [
+                              { name: 'Critical', value: allFindings.filter(f => f.severity === 'critical').length, color: '#e11d48' },
+                              { name: 'High', value: allFindings.filter(f => f.severity === 'high').length, color: '#f43f5e' },
+                              { name: 'Medium', value: allFindings.filter(f => f.severity === 'medium').length, color: '#f59e0b' },
+                              { name: 'Low', value: allFindings.filter(f => f.severity === 'low').length, color: '#06b6d4' },
+                            ];
+                          })()}
                           cx="50%"
                           cy="50%"
                           labelLine={false}
@@ -718,12 +735,17 @@ export default function Home() {
                           fill="#8884d8"
                           dataKey="value"
                         >
-                          {[
-                            { name: 'Critical', value: result.Findings.filter(f => f.severity === 'critical').length, color: '#e11d48' },
-                            { name: 'High', value: result.Findings.filter(f => f.severity === 'high').length, color: '#f43f5e' },
-                            { name: 'Medium', value: result.Findings.filter(f => f.severity === 'medium').length, color: '#f59e0b' },
-                            { name: 'Low', value: result.Findings.filter(f => f.severity === 'low').length, color: '#06b6d4' },
-                          ].map((entry, index) => (
+                          {(() => {
+                            const allFindings = result.FileResults
+                              ? result.FileResults.flatMap(fr => fr.Findings)
+                              : result.Findings || [];
+                            return [
+                              { name: 'Critical', value: allFindings.filter(f => f.severity === 'critical').length, color: '#e11d48' },
+                              { name: 'High', value: allFindings.filter(f => f.severity === 'high').length, color: '#f43f5e' },
+                              { name: 'Medium', value: allFindings.filter(f => f.severity === 'medium').length, color: '#f59e0b' },
+                              { name: 'Low', value: allFindings.filter(f => f.severity === 'low').length, color: '#06b6d4' },
+                            ];
+                          })().map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
@@ -749,7 +771,7 @@ export default function Home() {
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={Object.entries(
-                        result.Findings.reduce((acc, f) => {
+                        getAllFindings(result).reduce((acc, f) => {
                           acc[f.category] = (acc[f.category] || 0) + 1;
                           return acc;
                         }, {} as Record<string, number>)
@@ -805,12 +827,17 @@ export default function Home() {
                       innerRadius="10%"
                       outerRadius="80%"
                       barSize={20}
-                      data={[
-                        { name: 'Critical', value: result.Findings.filter(f => f.severity === 'critical').length, fill: '#e11d48' },
-                        { name: 'High', value: result.Findings.filter(f => f.severity === 'high').length, fill: '#f43f5e' },
-                        { name: 'Medium', value: result.Findings.filter(f => f.severity === 'medium').length, fill: '#f59e0b' },
-                        { name: 'Low', value: result.Findings.filter(f => f.severity === 'low').length, fill: '#06b6d4' },
-                      ]}
+                      data={(() => {
+                        const allFindings = result.FileResults
+                          ? result.FileResults.flatMap(fr => fr.Findings)
+                          : result.Findings || [];
+                        return [
+                          { name: 'Critical', value: allFindings.filter(f => f.severity === 'critical').length, fill: '#e11d48' },
+                          { name: 'High', value: allFindings.filter(f => f.severity === 'high').length, fill: '#f43f5e' },
+                          { name: 'Medium', value: allFindings.filter(f => f.severity === 'medium').length, fill: '#f59e0b' },
+                          { name: 'Low', value: allFindings.filter(f => f.severity === 'low').length, fill: '#06b6d4' },
+                        ];
+                      })()}
                     >
                       <RadialBar
                         dataKey="value"
