@@ -69,6 +69,21 @@ class CustomRule:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'CustomRule':
         """Create rule from dictionary."""
+        # Handle nested pattern structure from YAML
+        if 'pattern' in data:
+            pattern_data = data.pop('pattern')
+            if isinstance(pattern_data, dict):
+                data['pattern_type'] = pattern_data.get('type', 'regex')
+                data['regex_pattern'] = pattern_data.get('expression')
+                data['regex_scope'] = pattern_data.get('scope', 'line')
+        
+        # Handle nested remediation structure from YAML
+        if 'remediation' in data:
+            remediation_data = data.pop('remediation')
+            if isinstance(remediation_data, dict):
+                data['remediation_message'] = remediation_data.get('message')
+                data['code_example'] = remediation_data.get('code_example')
+        
         return cls(**data)
     
     def matches_language(self, language: str) -> bool:
