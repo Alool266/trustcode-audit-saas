@@ -19,13 +19,16 @@ AI-powered code auditing platform that detects hallucinations, security vulnerab
 - **Modern Web UI**: Fintech Calm dark theme with glassmorphism effects, smooth Framer Motion animations
 
 ### Advanced Features
-- **File Tree View**: Navigate scanned projects with expandable file tree
-- **Search & Filtering**: Filter findings by severity, category, file, and search queries
+- **File Tree View**: Navigate scanned projects with expandable file tree showing per-file TrustScores
+- **Search & Filtering**: Filter findings by severity, category, file, and search queries with real-time updates
 - **Visual Analytics**: Pie charts, bar charts, and radial charts for severity distribution
 - **Detailed Findings Table**: Sortable, filterable table with code snippets and line numbers
 - **PhD-Level Recommendations**: AI-generated remediation guidance for each finding
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **Serverless Architecture**: Python backend integrated as Vercel serverless functions for easy deployment
+- **Real-time Progress**: Animated scanning progress with step indicators
+- **Client-side PDF Generation**: No server-side PDF generation needed - all done in browser
+- **Aggregated TrustScore**: Project-level TrustScore calculated from all file results
 
 ## Tech Stack
 
@@ -244,41 +247,61 @@ Certificates include:
 ### ✅ Completed Features
 
 **Multi-Language Support (Sprint 1-3)**
-- Python AST analysis (via `audit_engine.py`)
+- Python AST analysis (via `audit_engine.py` refactored to `python_analyzer.py`)
 - JavaScript/TypeScript analysis (tree-sitter)
 - Java, Go, Rust analyzers
 - Language router for automatic file type detection
+- Unified analyzer interface with consistent output
 
 **Project Scanning (Sprint 4)**
 - ZIP file upload support
 - Multi-file analysis with aggregation
-- File tree view in UI
+- File tree view in UI with per-file TrustScores
 - Intelligent file filtering (ignores node_modules, .git, etc.)
+- Combined project-level TrustScore
 
 **Enhanced Reports (Sprint 5)**
 - CVSS-inspired severity scoring (0-10)
 - Visual charts: Pie (severity distribution), Bar (category breakdown), Radial (CVSS)
 - Detailed findings with code snippets
 - PhD-level remediation recommendations
-- TrustScore calculation (0-100)
+- TrustScore calculation (0-100) based on severity weights
 
 **Custom Rules (Sprint 6)**
-- YAML-based rule engine
+- YAML-based rule engine (`custom_rule_engine.py`)
 - Example rules for security API keys and hardcoded secrets
 - Extensible rule format for custom patterns
+- Nested YAML structure support (pattern.type, pattern.expression, remediation.message)
 
 **Frontend UI (Sprint 7)**
 - Fintech Calm dark theme with glassmorphism
-- Framer Motion animations
+- Framer Motion animations for smooth transitions
 - Search and filter by severity/category/file
-- Client-side PDF generation (jsPDF)
-- Responsive design
+- Client-side PDF generation (jsPDF + jsPDF-AutoTable)
+- Responsive design for desktop and mobile
+- Real-time scanning progress indicators
+- Interactive file tree for project scans
 
 **Deployment (Sprint 8)**
 - Vercel serverless functions integration
-- Single-project deployment (frontend + Python backend)
+- Single-project deployment (frontend + Python backend in `/frontend/backend/`)
+- Python 3.12 support with uv package manager
 - Docker support for local development
 - Production-ready on https://frontend-six-psi-78.vercel.app
+
+### 🔧 Recent Bug Fixes & Improvements
+
+**April 2025 - Critical Fixes**
+- **YAML Rule Parsing** - Fixed `CustomRule.from_dict()` to handle nested pattern and remediation structures from YAML files
+- **Mixed Finding Types** - Updated all analyzers (`base_analyzer.py`, `javascript_analyzer.py`, `java_analyzer.py`, `go_analyzer.py`, `rust_analyzer.py`) and `route.py` to handle both `AuditFinding` objects and dictionary findings from custom rules
+- **Zip Upload Frontend** - Fixed TypeScript errors in `page.tsx` by using `getAllFindings()` helper consistently for both single-file and project scan results
+- **Certificate Generation** - Updated PDF generation to work with both response formats (single file vs zip)
+
+**Performance Optimizations**
+- TypeScript compilation verified (no errors)
+- Efficient finding aggregation using `flatMap`
+- Duplicate variable declarations removed
+- Consistent type handling across all analyzers
 
 ### 🚀 Future Enhancements
 
