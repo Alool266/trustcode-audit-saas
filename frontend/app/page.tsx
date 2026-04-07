@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, RadialBarChart, RadialBar } from 'recharts';
 
 interface AuditResult {
   TrustScore: number;
@@ -523,6 +524,141 @@ export default function Home() {
                     </div>
                     <div className="text-sm text-slate-400">Audit Date</div>
                   </div>
+                </div>
+              </div>
+
+              {/* Enhanced Visualizations */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Severity Distribution Pie Chart */}
+                <div className="glass rounded-2xl p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    Severity Distribution
+                  </h3>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: 'Critical', value: result.Findings.filter(f => f.severity === 'critical').length, color: '#e11d48' },
+                            { name: 'High', value: result.Findings.filter(f => f.severity === 'high').length, color: '#f43f5e' },
+                            { name: 'Medium', value: result.Findings.filter(f => f.severity === 'medium').length, color: '#f59e0b' },
+                            { name: 'Low', value: result.Findings.filter(f => f.severity === 'low').length, color: '#06b6d4' },
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {[
+                            { name: 'Critical', value: result.Findings.filter(f => f.severity === 'critical').length, color: '#e11d48' },
+                            { name: 'High', value: result.Findings.filter(f => f.severity === 'high').length, color: '#f43f5e' },
+                            { name: 'Medium', value: result.Findings.filter(f => f.severity === 'medium').length, color: '#f59e0b' },
+                            { name: 'Low', value: result.Findings.filter(f => f.severity === 'low').length, color: '#06b6d4' },
+                          ].map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1e293b',
+                            border: '1px solid #475569',
+                            borderRadius: '8px',
+                            color: '#f1f5f9'
+                          }}
+                        />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Findings by Category Bar Chart */}
+                <div className="glass rounded-2xl p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    Issues by Category
+                  </h3>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={Object.entries(
+                        result.Findings.reduce((acc, f) => {
+                          acc[f.category] = (acc[f.category] || 0) + 1;
+                          return acc;
+                        }, {} as Record<string, number>)
+                      ).map(([name, value]) => ({ name, value }))}>
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fill: '#94a3b8', fontSize: 12 }}
+                          axisLine={{ stroke: '#475569' }}
+                          tickLine={{ stroke: '#475569' }}
+                        />
+                        <YAxis
+                          tick={{ fill: '#94a3b8', fontSize: 12 }}
+                          axisLine={{ stroke: '#475569' }}
+                          tickLine={{ stroke: '#475569' }}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1e293b',
+                            border: '1px solid #475569',
+                            borderRadius: '8px',
+                            color: '#f1f5f9'
+                          }}
+                        />
+                        <Legend />
+                        <Bar
+                          dataKey="value"
+                          fill="url(#barGradient)"
+                          radius={[4, 4, 0, 0]}
+                        >
+                          <defs>
+                            <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#06b6d4" />
+                              <stop offset="100%" stopColor="#3b82f6" />
+                            </linearGradient>
+                          </defs>
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+
+              {/* CVSS Score Radial Chart */}
+              <div className="glass rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">
+                  CVSS Severity Breakdown
+                </h3>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadialBarChart
+                      cx="50%"
+                      cy="50%"
+                      innerRadius="10%"
+                      outerRadius="80%"
+                      barSize={20}
+                      data={[
+                        { name: 'Critical', value: result.Findings.filter(f => f.severity === 'critical').length, fill: '#e11d48' },
+                        { name: 'High', value: result.Findings.filter(f => f.severity === 'high').length, fill: '#f43f5e' },
+                        { name: 'Medium', value: result.Findings.filter(f => f.severity === 'medium').length, fill: '#f59e0b' },
+                        { name: 'Low', value: result.Findings.filter(f => f.severity === 'low').length, fill: '#06b6d4' },
+                      ]}
+                    >
+                      <RadialBar
+                        dataKey="value"
+                        background
+                      />
+                      <Legend
+                        iconSize={10}
+                        layout="vertical"
+                        verticalAlign="middle"
+                        align="right"
+                        wrapperStyle={{ color: '#94a3b8' }}
+                      />
+                    </RadialBarChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
 
