@@ -6,7 +6,7 @@
       "use": "@vercel/next"
     },
     {
-      "src": "app/api/audit/route.py",
+      "src": "backend/route.py",
       "use": "@vercel/python",
       "config": {
         "runtime": "python3.11"
@@ -16,7 +16,7 @@
   "routes": [
     {
       "src": "/api/audit",
-      "dest": "app/api/audit/route.py"
+      "dest": "backend/route.py"
     },
     {
       "src": "/(.*)",
