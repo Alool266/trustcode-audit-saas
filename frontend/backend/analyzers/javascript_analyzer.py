@@ -355,7 +355,7 @@ class JavaScriptAnalyzer(BaseAnalyzer):
     def get_language_name(self) -> str:
         return "javascript"
     
-    def calculate_trust_score(self, findings: List[AuditFinding]) -> int:
+    def calculate_trust_score(self, findings: List) -> int:
         """Calculate trust score for JavaScript/TypeScript code."""
         score = 100
         
@@ -368,18 +368,33 @@ class JavaScriptAnalyzer(BaseAnalyzer):
         }
         
         for finding in findings:
-            weight = severity_weights.get(finding.severity.lower(), 5)
+            # Handle both AuditFinding objects and dictionaries
+            if isinstance(finding, dict):
+                severity = finding.get('severity', 'medium').lower()
+            else:
+                severity = finding.severity.lower()
+            weight = severity_weights.get(severity, 5)
             score -= weight
         
         return max(0, min(100, score))
     
-    def generate_recommendation(self, findings: List[AuditFinding]) -> str:
+    def generate_recommendation(self, findings: List) -> str:
         """Generate recommendation for JavaScript/TypeScript code."""
         if not findings:
             return "EXCELLENT: No significant issues detected. The JavaScript/TypeScript code follows good practices. Continue maintaining code quality and consider adding comprehensive unit tests."
         
-        critical_count = sum(1 for f in findings if f.severity.lower() == 'critical')
-        high_count = sum(1 for f in findings if f.severity.lower() == 'high')
+        critical_count = 0
+        high_count = 0
+        for f in findings:
+            # Handle both AuditFinding objects and dictionaries
+            if isinstance(f, dict):
+                severity = f.get('severity', '').lower()
+            else:
+                severity = f.severity.lower()
+            if severity == 'critical':
+                critical_count += 1
+            elif severity == 'high':
+                high_count += 1
         
         if critical_count > 0:
             return f"CRITICAL SECURITY ISSUES: {critical_count} critical issue(s) detected. Address code injection risks (eval, Function), XSS vulnerabilities (innerHTML), and hardcoded secrets immediately. These pose serious security threats to your application."

@@ -390,7 +390,7 @@ class GoAnalyzer(BaseAnalyzer):
         
         return round(score, 1)
     
-    def calculate_trust_score(self, findings: List[AuditFinding]) -> int:
+    def calculate_trust_score(self, findings: List) -> int:
         """Calculate trust score for Go code."""
         score = 100
         
@@ -403,12 +403,17 @@ class GoAnalyzer(BaseAnalyzer):
         }
         
         for finding in findings:
-            weight = severity_weights.get(finding.severity.lower(), 5)
+            # Handle both AuditFinding objects and dictionaries
+            if isinstance(finding, dict):
+                severity = finding.get('severity', 'medium').lower()
+            else:
+                severity = finding.severity.lower()
+            weight = severity_weights.get(severity, 5)
             score -= weight
         
         return max(0, min(100, score))
     
-    def generate_recommendation(self, findings: List[AuditFinding]) -> str:
+    def generate_recommendation(self, findings: List) -> str:
         """Generate a comprehensive recommendation."""
         if not findings:
             return "EXCELLENT: No significant issues detected. The Go code demonstrates strong adherence to best practices. Maintain this standard and consider implementing comprehensive testing."
@@ -416,8 +421,15 @@ class GoAnalyzer(BaseAnalyzer):
         categories = {}
         severities = {}
         for f in findings:
-            categories[f.category] = categories.get(f.category, 0) + 1
-            severities[f.severity] = severities.get(f.severity, 0) + 1
+            # Handle both AuditFinding objects and dictionaries
+            if isinstance(f, dict):
+                category = f.get('category', 'Unknown')
+                severity = f.get('severity', 'medium')
+            else:
+                category = f.category
+                severity = f.severity
+            categories[category] = categories.get(category, 0) + 1
+            severities[severity] = severities.get(severity, 0) + 1
         
         critical_count = severities.get('critical', 0)
         high_count = severities.get('high', 0)

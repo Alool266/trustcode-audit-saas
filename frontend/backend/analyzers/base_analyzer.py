@@ -170,10 +170,20 @@ class BaseAnalyzer(ABC):
         
         return max(0, min(100, score))
     
-    def generate_recommendation(self, findings: List[AuditFinding]) -> str:
+    def generate_recommendation(self, findings: List) -> str:
         """Generate a PhD-level recommendation based on findings."""
-        critical_count = sum(1 for f in findings if f.severity.lower() == 'critical')
-        high_count = sum(1 for f in findings if f.severity.lower() == 'high')
+        critical_count = 0
+        high_count = 0
+        for f in findings:
+            # Handle both AuditFinding objects and dictionaries
+            if isinstance(f, dict):
+                severity = f.get('severity', '').lower()
+            else:
+                severity = f.severity.lower()
+            if severity == 'critical':
+                critical_count += 1
+            elif severity == 'high':
+                high_count += 1
         
         if critical_count > 0:
             return f"CRITICAL INTERVENTION REQUIRED: {critical_count} critical issue(s) detected. Immediate refactoring is essential before production deployment. Focus on security vulnerabilities and API correctness. The current code exhibits patterns consistent with AI hallucination artifacts."
