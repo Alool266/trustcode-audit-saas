@@ -8,6 +8,8 @@ import sys
 import json
 import uuid
 import tempfile
+import zipfile
+import io
 from pathlib import Path
 
 # Add current directory and frontend root to path for imports
@@ -42,7 +44,7 @@ reducer = FalsePositiveReducer()
 async def audit_code(request: Request):
     """
     Analyze uploaded code file(s).
-    Supports both single file uploads and zip archives (future).
+    Supports both single file uploads and zip archives.
     """
     try:
         # Get the uploaded file
@@ -57,10 +59,9 @@ async def audit_code(request: Request):
         
         filename = file.filename
         
-        # Check if it's a zip file (future support)
+        # Check if it's a zip file
         if filename.endswith('.zip'):
-            # TODO: Implement zip handling in Sprint 2
-            raise HTTPException(status_code=501, detail="Zip upload not yet supported")
+            return await audit_zip(file)
         
         # Check if the file extension is supported
         supported_extensions = router.get_supported_extensions()
@@ -117,6 +118,119 @@ async def audit_code(request: Request):
                 file_path.unlink()
             except:
                 pass
+
+
+async def audit_zip(file):
+    """Analyze all supported files in a zip archive."""
+    supported_extensions = router.get_supported_extensions()
+    
+    # Use platform-appropriate temp directory
+    if os.environ.get('VERCEL'):
+        upload_dir = Path("/tmp/uploads")
+    else:
+        upload_dir = Path(tempfile.gettempdir()) / "trustcode_audit_uploads"
+    
+    upload_dir.mkdir(exist_ok=True)
+    
+    # Read zip file content
+    zip_content = await file.read()
+    zip_file = zipfile.ZipFile(io.BytesIO(zip_content))
+    
+    all_findings = []
+    file_results = []
+    total_files = 0
+    scanned_files = 0
+    
+    # Get list of files in zip
+    file_list = [f for f in zip_file.namelist() if not f.startswith('__MACOSX') and not f.startswith('.')]
+    total_files = len([f for f in file_list if any(f.endswith(ext) for ext in supported_extensions)])
+    
+    for file_name in file_list:
+        # Skip directories
+        if file_name.endswith('/'):
+            continue
+        
+        # Check if file has supported extension
+        if not any(file_name.endswith(ext) for ext in supported_extensions):
+            continue
+        
+        scanned_files += 1
+        
+        try:
+            # Read file content from zip
+            source_code = zip_file.read(file_name).decode('utf-8', errors='ignore')
+            
+            # Create temp file for analysis
+            file_id = str(uuid.uuid4())
+            file_extension = Path(file_name).suffix
+            temp_path = upload_dir / f"{file_id}{file_extension}"
+            
+            with open(temp_path, 'w', encoding='utf-8') as f:
+                f.write(source_code)
+            
+            # Analyze using the language router
+            result = router.analyze_file(source_code, file_name)
+            
+            # Apply false positive reduction
+            if 'Findings' in result:
+                result['Findings'] = reducer.filter_findings(result['Findings'], file_name)
+                result['AuditMetadata']['total_findings'] = len(result['Findings'])
+                # Recalculate trust score after filtering using the appropriate analyzer
+                analyzer = router.get_analyzer(file_name)
+                if analyzer:
+                    result['TrustScore'] = analyzer.calculate_trust_score(result['Findings'])
+                    result['PhD_Level_Recommendation'] = analyzer.generate_recommendation(result['Findings'])
+            
+            # Add file path to result
+            result['file'] = file_name
+            file_results.append(result)
+            
+            # Collect all findings
+            all_findings.extend(result.get('Findings', []))
+            
+            # Clean up temp file
+            try:
+                temp_path.unlink()
+            except:
+                pass
+                
+        except Exception as e:
+            file_results.append({
+                'file': file_name,
+                'error': str(e),
+                'TrustScore': 0,
+                'Findings': []
+            })
+    
+    # Calculate overall trust score
+    if file_results:
+        avg_score = sum(r.get('TrustScore', 0) for r in file_results) / len(file_results)
+        overall_trust_score = int(avg_score)
+    else:
+        overall_trust_score = 0
+    
+    # Generate overall recommendation
+    if all_findings:
+        critical_count = sum(1 for f in all_findings if f.get('severity', '').lower() == 'critical')
+        high_count = sum(1 for f in all_findings if f.get('severity', '').lower() == 'high')
+        
+        if critical_count > 0:
+            recommendation = f"CRITICAL: {critical_count} critical issue(s) found across {scanned_files} files. Immediate attention required."
+        elif high_count > 0:
+            recommendation = f"HIGH PRIORITY: {high_count} high-severity issue(s) require attention across {scanned_files} files."
+        else:
+            recommendation = f"MODERATE: {len(all_findings)} issues found across {scanned_files} files. Review and address as needed."
+    else:
+        recommendation = "EXCELLENT: No significant issues detected across all scanned files."
+    
+    return JSONResponse(content={
+        "TrustScore": overall_trust_score,
+        "TotalFiles": total_files,
+        "ScannedFiles": scanned_files,
+        "TotalFindings": len(all_findings),
+        "Recommendation": recommendation,
+        "FileResults": file_results
+    })
 
 
 @app.get("/api/sample-results")
