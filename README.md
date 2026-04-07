@@ -4,52 +4,95 @@ AI-powered code auditing platform that detects hallucinations, security vulnerab
 
 ## Features
 
-- **AST-Based Static Analysis**: Deep Python code analysis using Abstract Syntax Trees
-- **AI Hallucination Detection**: Identifies non-existent APIs and methods
-- **Security Scanning**: Detects eval usage, hardcoded secrets, and risky patterns
-- **TrustScore Calculation**: Comprehensive scoring system (0-100)
-- **Professional Certificates**: PDF generation with corporate branding
-- **Modern Web UI**: Fintech Calm design with glassmorphism effects
+### Core Capabilities
+- **Multi-Language Support**: Python, JavaScript, TypeScript, Java, Go, Rust via AST parsing and tree-sitter
+- **AST-Based Static Analysis**: Deep code analysis using Abstract Syntax Trees for Python, tree-sitter for other languages
+- **AI Hallucination Detection**: Identifies non-existent APIs, methods, and logic inconsistencies
+- **Security Scanning**: Detects eval/exec usage, hardcoded secrets, SQL injection patterns, XSS, command injection, and more
+- **Code Quality Checks**: Empty except blocks, bare except, nested loops, magic numbers, resource leaks
+- **TrustScore Calculation**: Comprehensive scoring system (0-100) with CVSS-inspired severity levels
+- **Project Scanning**: Upload entire codebases as ZIP files for aggregated analysis across multiple files
+- **Professional Certificates**: Client-side PDF generation with TrustCode branding, Ali Hasan credit, and detailed findings
+- **Interactive Dashboard**: Real-time results with severity distribution charts, category breakdown, and CVSS radial visualization
+- **Custom Rule Engine**: YAML-based rule definition for organization-specific detection rules
+- **False Positive Reduction**: Context-aware filtering for test files, mocks, and example code
+- **Modern Web UI**: Fintech Calm dark theme with glassmorphism effects, smooth Framer Motion animations
+
+### Advanced Features
+- **File Tree View**: Navigate scanned projects with expandable file tree
+- **Search & Filtering**: Filter findings by severity, category, file, and search queries
+- **Visual Analytics**: Pie charts, bar charts, and radial charts for severity distribution
+- **Detailed Findings Table**: Sortable, filterable table with code snippets and line numbers
+- **PhD-Level Recommendations**: AI-generated remediation guidance for each finding
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
+- **Serverless Architecture**: Python backend integrated as Vercel serverless functions for easy deployment
 
 ## Tech Stack
 
 **Frontend:**
-- Next.js 14 (App Router)
-- TypeScript
-- Tailwind CSS
-- Framer Motion
-- Vercel-ready
+- Next.js 16 (App Router)
+- TypeScript 5
+- Tailwind CSS 4
+- Framer Motion 12
+- Recharts (data visualization)
+- jsPDF + jsPDF-AutoTable (client-side PDF generation)
 
-**Backend:**
-- FastAPI
+**Backend (Serverless):**
+- FastAPI 0.104 (Python web framework)
 - Python 3.11
-- ReportLab (PDF generation)
+- Mangum (AWS Lambda/Vercel adapter)
+- Tree-sitter (multi-language AST parsing)
+- PyYAML (custom rule engine)
 - Uvicorn (ASGI server)
+
+**Deployment:**
+- Vercel (Frontend + Python Serverless Functions)
+- Docker & Docker Compose (local development)
+- GitHub (source control)
 
 ## Project Structure
 
 ```
 trustcode-audit-saas/
-├── frontend/           # Next.js web application
+├── frontend/                 # Next.js web application (deployed to Vercel)
 │   ├── app/
-│   │   ├── api/       # API routes (audit, generate-certificate, sample-results)
+│   │   ├── api/
+│   │   │   ├── audit-backend/    # Python serverless function (legacy)
+│   │   │   ├── generate-certificate/  # Next.js API route (stub)
+│   │   │   └── sample-results/  # Next.js API route for demo data
 │   │   ├── globals.css
 │   │   ├── layout.tsx
-│   │   └── page.tsx   # Main UI
+│   │   └── page.tsx            # Main UI with PDF generation
+│   ├── backend/                # Python serverless functions (Vercel)
+│   │   ├── route.py            # Main API router for /api/audit
+│   │   ├── analyzers/          # Language-specific analyzers
+│   │   │   ├── base_analyzer.py
+│   │   │   ├── python_analyzer.py (refactored from audit_engine.py)
+│   │   │   ├── javascript_analyzer.py
+│   │   │   ├── java_analyzer.py
+│   │   │   ├── go_analyzer.py
+│   │   │   ├── rust_analyzer.py
+│   │   │   └── false_positive_reducer.py
+│   │   ├── language_router.py  # Routes files to appropriate analyzer
+│   │   ├── custom_rule_engine.py  # YAML-based rule engine
+│   │   ├── requirements.txt
+│   │   └── sample_audit_results.json
+│   ├── public/
 │   ├── Dockerfile
-│   ├── vercel.json
+│   ├── vercel.json             # Vercel build configuration
 │   ├── package.json
 │   └── .env.example
-├── backend/            # FastAPI server
-│   ├── main.py        # API endpoints
-│   ├── audit_engine.py # Core analysis engine
-│   ├── generate_certificate_pdf.py # PDF generator
+├── backend/                    # Legacy separate backend (deprecated)
+│   ├── main.py
+│   ├── audit_engine.py
+│   ├── generate_certificate_pdf.py
 │   ├── requirements.txt
-│   ├── Dockerfile
-│   ├── Procfile
-│   └── sample_audit_results.json
-├── docker-compose.yml  # Local development orchestration
-└── README.md
+│   └── vercel.json
+├── docker-compose.yml          # Local development orchestration
+├── plans/
+│   └── IMPLEMENTATION_PLAN.md  # Detailed implementation plan
+├── README.md
+└── .gitignore
 ```
 
 ## Quick Start
@@ -98,41 +141,56 @@ For production, set this to your deployed backend URL.
 
 ## API Endpoints
 
-### Backend (FastAPI)
+### Python Serverless Functions (Vercel)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/health` | Health check |
-| POST | `/api/audit` | Upload Python file for analysis |
-| POST | `/api/generate-certificate` | Generate PDF certificate |
+| GET | `/api/health` | Health check |
+| POST | `/api/audit` | Upload Python file or ZIP for analysis |
 | GET | `/api/sample-results` | Get demo audit results |
 
 ### Frontend (Next.js API Routes)
 
-The frontend provides proxy endpoints that either:
-- Forward requests to the backend API (if `NEXT_PUBLIC_API_URL` is set)
-- Execute Python scripts locally (for development without backend)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/sample-results` | Returns sample audit results from local JSON |
+| POST | `/api/generate-certificate` | Stub (PDF now generated client-side) |
+
+### Request/Response Format
+
+**Upload File for Audit:**
+```
+POST /api/audit
+Content-Type: multipart/form-data
+Body: { file: File }
+
+Response: {
+  TrustScore: number,
+  TotalFiles: number,
+  ScannedFiles: number,
+  TotalFindings: number,
+  Recommendation: string,
+  FileResults: [...],
+  AuditMetadata: {...}
+}
+```
 
 ## Deployment
 
-### Vercel (Frontend)
+### Vercel (Recommended - Single Project)
+
+The entire application is deployed as a single Next.js project with Python serverless functions:
 
 1. Push code to GitHub
 2. Import repository in Vercel
-3. Set environment variable: `NEXT_PUBLIC_API_URL` to your backend URL
+3. **No environment variables required** (Python backend is integrated)
 4. Deploy
 
 **Live Demo:** [https://frontend-six-psi-78.vercel.app](https://frontend-six-psi-78.vercel.app)
 
-### Railway/Heroku (Backend)
+> **Note:** The Python audit backend runs as Vercel serverless functions (`/api/audit`, `/api/sample-results`) within the frontend project. This eliminates the need for separate backend deployment and simplifies scaling.
 
-1. Push code to GitHub
-2. Import repository in Railway or Heroku
-3. Build command: `pip install -r requirements.txt`
-4. Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-5. Deploy
-
-### Docker (Production)
+### Docker (Local Development/Production)
 
 ```bash
 # Build and run with docker-compose
@@ -143,16 +201,34 @@ docker build -t trustcode-frontend ./frontend
 docker build -t trustcode-backend ./backend
 ```
 
+### Local Development
+
+```bash
+# Frontend
+cd frontend
+npm install
+npm run dev
+
+# Backend (in separate terminal)
+cd frontend/backend
+pip install -r requirements.txt
+# The backend is automatically called by the frontend via /api/audit
+```
+
 ## Configuration
-
-### Backend Settings
-
-- `PORT`: Server port (default: 8000)
-- Upload and certificate directories are created automatically
 
 ### Frontend Settings
 
-- `NEXT_PUBLIC_API_URL`: Backend API URL (required for production)
+- `NEXT_PUBLIC_API_URL`: Optional. If set, frontend will use external API instead of local Python serverless function. For local development without Python, this can point to any compatible API.
+  - Default: Uses internal `/api/audit` route (Python serverless function)
+  - Example: `NEXT_PUBLIC_API_URL=http://localhost:8000` (for separate backend)
+
+### Python Backend Settings
+
+The Python serverless function runs within Vercel and uses:
+- `/tmp` directory for temporary file storage (Vercel's ephemeral filesystem)
+- Automatic scaling based on request volume
+- No persistent storage (results are returned directly in response)
 
 ## Certificate Generation
 
@@ -163,44 +239,99 @@ Certificates include:
 - Professional branding with creator credit
 - Footer with timestamp and logo
 
-## Suggestions for Improvement
+## Current Implementation Status
 
-### Audit Engine Enhancements
-- **Add more detection rules**: SQL injection patterns, XSS vulnerabilities, insecure deserialization
-- **Support more languages**: JavaScript/TypeScript, Java, Go, Rust
-- **AST-based data flow analysis**: Track variable taint propagation for security issues
-- **Custom rule engine**: Allow users to define custom detection rules via YAML/JSON
-- **Severity scoring**: Implement CVSS-like scoring for more granular severity levels
-- **False positive reduction**: Add context-aware analysis to reduce false positives
+### ✅ Completed Features
 
-### UI/UX Improvements
-- **File history**: Track audit results over time with trend graphs
-- **Batch processing**: Upload multiple files at once
-- **GitHub/GitLab integration**: Connect repositories for automated CI/CD scanning
-- **Dark/light mode toggle**: Add theme switching capability
-- **Export formats**: Support JSON, CSV, HTML, and Markdown exports
-- **Interactive code viewer**: Highlight issues directly in the source code with syntax highlighting
-- **Dashboard**: Show aggregate statistics across multiple audits
+**Multi-Language Support (Sprint 1-3)**
+- Python AST analysis (via `audit_engine.py`)
+- JavaScript/TypeScript analysis (tree-sitter)
+- Java, Go, Rust analyzers
+- Language router for automatic file type detection
 
-### Backend/Infrastructure
-- **Database integration**: Store audit results in PostgreSQL/MongoDB
-- **User authentication**: Add login/signup with JWT tokens
-- **Rate limiting**: Prevent abuse with request throttling
-- **Caching**: Cache results for identical files to improve performance
-- **Webhook support**: Notify external services when audits complete
-- **CI/CD pipeline**: Add GitHub Actions for automated testing and deployment
+**Project Scanning (Sprint 4)**
+- ZIP file upload support
+- Multi-file analysis with aggregation
+- File tree view in UI
+- Intelligent file filtering (ignores node_modules, .git, etc.)
 
-### Certificate Enhancements
-- **Custom branding**: Allow users to add their company logo and colors
-- **Verification URL**: Add a unique URL to verify certificate authenticity
-- **QR code**: Embed QR code linking to verification page
-- **Multiple templates**: Offer different certificate styles (corporate, academic, etc.)
+**Enhanced Reports (Sprint 5)**
+- CVSS-inspired severity scoring (0-10)
+- Visual charts: Pie (severity distribution), Bar (category breakdown), Radial (CVSS)
+- Detailed findings with code snippets
+- PhD-level remediation recommendations
+- TrustScore calculation (0-100)
 
-### Monetization Features
-- **Free tier**: Limited to 5 audits per month
-- **Pro tier**: Unlimited audits, custom branding, priority support
-- **Enterprise tier**: SSO, API access, dedicated support, SLA
-- **Usage analytics**: Dashboard showing audit trends and team usage
+**Custom Rules (Sprint 6)**
+- YAML-based rule engine
+- Example rules for security API keys and hardcoded secrets
+- Extensible rule format for custom patterns
+
+**Frontend UI (Sprint 7)**
+- Fintech Calm dark theme with glassmorphism
+- Framer Motion animations
+- Search and filter by severity/category/file
+- Client-side PDF generation (jsPDF)
+- Responsive design
+
+**Deployment (Sprint 8)**
+- Vercel serverless functions integration
+- Single-project deployment (frontend + Python backend)
+- Docker support for local development
+- Production-ready on https://frontend-six-psi-78.vercel.app
+
+### 🚀 Future Enhancements
+
+**Security Analysis**
+- **Taint/Data Flow Analysis**: Track user input propagation to detect SQL injection, XSS, command injection
+- **CWE Mapping**: Map findings to Common Weakness Enumeration IDs
+- **Dependency Scanning**: Analyze requirements.txt, package.json for vulnerable dependencies
+- **Secrets Detection**: Advanced pattern matching for API keys, passwords, certificates
+
+**Performance & Scale**
+- **Parallel Processing**: Analyze multiple files concurrently within Vercel's timeout limits
+- **Incremental Scanning**: Cache results and only re-scan changed files
+- **Streaming Responses**: Stream results for large projects to avoid timeouts
+- **Background Processing**: Queue-based processing for very large codebases
+
+**User Experience**
+- **Historical Tracking**: Save audit history and show trend graphs over time
+- **Git Integration**: Connect to GitHub/GitLab for automated PR scanning
+- **Code Viewer**: Interactive code viewer with syntax highlighting and inline issue markers
+- **Export Options**: JSON, CSV, HTML, Markdown exports in addition to PDF
+- **Team Features**: Multi-user support, shared projects, role-based access
+
+**Enterprise Features**
+- **Authentication**: JWT-based login with email/password or OAuth (Google, GitHub)
+- **Database**: PostgreSQL for storing audit history, user data, custom rules
+- **Rate Limiting**: API throttling per user/IP
+- **Webhooks**: Notify external systems (Slack, Teams, CI/CD) on audit completion
+- **Audit Trail**: Complete log of all actions for compliance
+
+**Advanced Analytics**
+- **Risk Heatmap**: Visualize risk distribution across the codebase
+- **Remediation Workflow**: Assign findings to team members, track fix progress
+- **Compliance Reports**: Generate reports for SOC2, ISO27001, GDPR requirements
+- **Benchmarking**: Compare your code quality against industry standards
+
+**AI-Powered Features**
+- **Smart Fix Suggestions**: AI-generated code fixes for each finding
+- **Code Review Automation**: Automatically review PRs and post comments
+- **Learning Mode**: Adapt to your codebase and reduce false positives over time
+- **Natural Language Queries**: Ask questions about your audit results in plain English
+
+**Certificate Enhancements**
+- **Verification Portal**: Online page to verify certificate authenticity using unique IDs
+- **QR Codes**: Embed scannable QR codes linking to verification pages
+- **Custom Templates**: Multiple certificate designs (corporate, academic, startup)
+- **Digital Signatures**: Cryptographically signed certificates for tamper-proof verification
+- **Branding**: Upload custom logos, colors, and company information
+
+**Monetization**
+- **Usage-Based Pricing**: Pay per audit or per line scanned
+- **Subscription Tiers**: Free (5 audits/mo), Pro ($29/mo), Enterprise (custom)
+- **On-Premise Deployment**: Self-hosted version for air-gapped environments
+- **White Label**: Rebrand the entire platform for agencies and consultants
 
 ## License
 
