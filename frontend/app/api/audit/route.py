@@ -15,7 +15,9 @@ from datetime import datetime
 from pathlib import Path
 
 # Add current directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
 
 try:
     from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Request
